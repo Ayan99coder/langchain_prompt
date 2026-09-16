@@ -1,5 +1,5 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate,load_prompt
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -38,38 +38,16 @@ length_input = st.selectbox(
         "Long (detailed explanation)"
     ]
 )
-prompt  = PromptTemplate(
-    template='''Please summarize the research paper titled "{paper_input}" with the following specifications:
 
-Explanation Style: {style_input}
-Explanation Length: {length_input}
+prompt = load_prompt('template.json')
 
-1. Mathematical Details:
-- Include relevant mathematical equations if present in the paper.
-- Explain mathematical concepts using simple, intuitive code snippets where applicable.
+if st.button("Run"):
+    chain = prompt | model
 
-2. Analogies:
-- Use relatable analogies to simplify complex ideas.
+    result = chain.invoke({
+        "paper_input": paper_input,
+        "style_input": style_input,
+        "length_input": length_input
+    })
 
-If certain information is not available in the paper, respond with:
-"Insufficient information available"
-instead of guessing.
-
-Ensure the summary is clear, accurate, and aligned with the provided style and length.''',
-
-    input_variables=[
-        'paper_input',
-        'style_input',
-        'length_input'
-    ]
-)
-formatted_prompt = prompt.invoke({
-    "paper_input": paper_input,
-    "style_input": style_input,
-    "length_input": length_input
-})
-
-
-if st.button("run"):
-  result = model.invoke(formatted_prompt)
-  st.write(result.text)
+    st.write(result.content)
